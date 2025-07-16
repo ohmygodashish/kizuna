@@ -11,9 +11,14 @@ export async function submitData(formData: FormData) {
   try {
     const imageFile = formData.get("image") as File;
     const audioFile = formData.get("audio") as File;
+    const userName = formData.get("userName") as string;
 
     if (!imageFile || imageFile.size === 0 || !audioFile || audioFile.size === 0) {
       return { success: false, error: "Image and audio files are required." };
+    }
+
+    if (!userName || userName.trim() === "") {
+      return { success: false, error: "User name is required." };
     }
 
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
@@ -71,11 +76,13 @@ export async function submitData(formData: FormData) {
         { buffer: imageBuffer, fileName: imageFileName, mimeType: imageFile.type },
         { buffer: audioBuffer, fileName: audioFileName, mimeType: audioFile.type },
       ],
-      primaryCompany
+      primaryCompany,
+      userName
     );
 
     // Prepare sheet data
     const sheetData = {
+      userName,
       ...cardData,
       transcription: audioData.transcription,
       summary: audioData.summary,

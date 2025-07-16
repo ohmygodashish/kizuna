@@ -15,9 +15,9 @@ function bufferToStream(buffer: Buffer) {
   return stream;
 }
 
-export async function getOrCreateCompanyFolder(companyName: string): Promise<string> {
+export async function getOrCreateUserFolder(userName: string): Promise<string> {
   try {
-    const safeFolderName = companyName.replace(/[<>:"/\\|?*]/g, "_").trim() || "Unknown_Company";
+    const safeFolderName = userName.replace(/[<>:"/\\|?*]/g, "_").trim() || "Unknown_User";
     const searchResponse = await drive.files.list({
       q: `name='${safeFolderName}' and mimeType='application/vnd.google-apps.folder' and parents in '${GOOGLE_DRIVE_FOLDER_ID}' and trashed=false`,
       fields: "files(id)",
@@ -31,6 +31,32 @@ export async function getOrCreateCompanyFolder(companyName: string): Promise<str
 
     const createResponse = await drive.files.create({
       requestBody: { name: safeFolderName, mimeType: "application/vnd.google-apps.folder", parents: [GOOGLE_DRIVE_FOLDER_ID] },
+      fields: "id",
+      supportsAllDrives: true,
+    });
+    return createResponse.data.id!;
+  } catch (error) {
+    console.error("Error in getOrCreateUserFolder:", error);
+    throw error;
+  }
+}
+
+export async function getOrCreateCompanyFolder(companyName: string, userFolderId: string): Promise<string> {
+  try {
+    const safeFolderName = companyName.replace(/[<>:"/\\|?*]/g, "_").trim() || "Unknown_Company";
+    const searchResponse = await drive.files.list({
+      q: `name='${safeFolderName}' and mimeType='application/vnd.google-apps.folder' and parents in '${userFolderId}' and trashed=false`,
+      fields: "files(id)",
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+
+    if (searchResponse.data.files && searchResponse.data.files.length > 0) {
+      return searchResponse.data.files[0].id!;
+    }
+
+    const createResponse = await drive.files.create({
+      requestBody: { name: safeFolderName, mimeType: "application/vnd.google-apps.folder", parents: [userFolderId] },
       fields: "id",
       supportsAllDrives: true,
     });
@@ -53,10 +79,12 @@ async function uploadFileToDrive(fileBuffer: Buffer, fileName: string, mimeType:
 
 export async function uploadMultipleFiles(
   files: Array<{ buffer: Buffer; fileName: string; mimeType: string }>,
-  companyName: string
+  companyName: string,
+  userName: string
 ): Promise<{ folderId: string; folderLink: string; fileLinks: string[] }> {
   try {
-    const folderId = await getOrCreateCompanyFolder(companyName);
+    const userFolderId = await getOrCreateUserFolder(userName);
+    const folderId = await getOrCreateCompanyFolder(companyName, userFolderId);
     const folderLink = `https://drive.google.com/drive/folders/${folderId}`;
     const fileLinks: string[] = [];
 

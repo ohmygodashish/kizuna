@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ImageUploader } from "@/components/image-uploader"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { CompletionModal } from "@/components/completion-modal"
@@ -17,6 +18,7 @@ import { Loader2 } from "lucide-react"
 
 // Define a schema for file uploads using Zod
 const formSchema = z.object({
+  userName: z.string().min(1, "ユーザー名を選択してください。"),
   image: z
     .instanceof(File, { message: "画像ファイルを選択してください。" })
     .refine((file) => file.size > 0, "画像ファイルは必須です。"),
@@ -24,6 +26,9 @@ const formSchema = z.object({
     .instanceof(Blob, { message: "音声ファイルを録音してください。" })
     .refine((blob) => blob.size > 0, "音声ファイルは必須です。"),
 })
+
+// Available user names for the dropdown
+const userNames = ["Kyo", "Kaoru", "Tasukku", "Kishi", "Keiichi", "Shuhei", "Naru", "Masaya"]
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -33,6 +38,7 @@ export default function HomePage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      userName: "",
       image: new File([], ""),
       audio: new Blob(),
     },
@@ -45,6 +51,7 @@ export default function HomePage() {
     })
 
     const formData = new FormData()
+    formData.append("userName", values.userName)
     formData.append("image", values.image)
     formData.append("audio", values.audio)
 
@@ -114,16 +121,44 @@ export default function HomePage() {
                 )}
               />
 
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    処理中...
-                  </>
-                ) : (
-                  "送信"
-                )}
-              </Button>
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="userName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ユーザー名</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="選択してください" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {userNames.map((name) => (
+                              <SelectItem key={name} value={name}>
+                                {name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button type="submit" disabled={isLoading} className="px-8">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      処理中...
+                    </>
+                  ) : (
+                    "送信"
+                  )}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
