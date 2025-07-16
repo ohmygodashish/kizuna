@@ -28,7 +28,7 @@ const formSchema = z.object({
 })
 
 // Available user names for the dropdown
-const userNames = ["Kyo", "Kaoru", "Tasukku", "Kishi", "Keiichi", "Shuhei", "Naru", "Masaya"]
+const userNames = ["Kyo", "Kaoru", "Tasuku", "Kishi", "Keiichi", "Shuhei", "Naru", "Masaya"]
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
