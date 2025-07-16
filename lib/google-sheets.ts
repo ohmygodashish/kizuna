@@ -80,3 +80,15 @@ export async function appendMultipleToSheet(dataArray: SheetData[]) {
   });
   console.log(`${dataArray.length} records appended to sheet successfully.`);
 }
+
+// Add back the missing function for diagnostic routes
+export function getSpreadsheetInfo() {
+  try {
+    return {
+      message: "Spreadsheet info check",
+      hasSpreadsheetId: !!process.env.GOOGLE_SHEET_ID
+    };
+  } catch (error) {
+    throw error;
+  }
+}
