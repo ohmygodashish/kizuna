@@ -30,5 +30,7 @@ function createGoogleAuth() {
   }
 }
 
-// Create and export the auth client directly
-export const auth = createGoogleAuth();
+// Export a function to get the auth client at runtime
+export function getGoogleAuth() {
+  return createGoogleAuth();
+}
