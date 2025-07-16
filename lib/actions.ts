@@ -17,16 +17,54 @@ export async function submitData(formData: FormData) {
     }
 
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
-    const [extractionResult, audioResult] = await Promise.all([
+    const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
+
+    // Process OCR and audio in parallel, but handle failures gracefully
+    const [extractionResult, audioResult] = await Promise.allSettled([
       extractInfoFromImage(imageBuffer),
       processAudio(audioFile)
     ]);
 
-    const primaryCompany = extractionResult.cards[0]?.company || "Unknown_Company";
+    // Handle OCR result
+    let cardData = {
+      company: "Unknown_Company",
+      name: "Unknown",
+      email: "",
+      phone: "",
+      jobTitle: "",
+      badgeId: ""
+    };
+
+    if (extractionResult.status === "fulfilled") {
+      const extracted = extractionResult.value.cards[0];
+      cardData = extracted
+        ? {
+            ...cardData,
+            ...extracted,
+            jobTitle: extracted.jobTitle ?? "",
+          }
+        : cardData;
+    } else {
+      console.error("OCR processing failed:", extractionResult.reason);
+    }
+
+    // Handle audio result
+    let audioData = {
+      transcription: "Audio processing failed",
+      summary: "Audio processing failed"
+    };
+
+    if (audioResult.status === "fulfilled") {
+      audioData = audioResult.value;
+    } else {
+      console.error("Audio processing failed:", audioResult.reason);
+    }
+
+    // Upload files to Drive (this should always happen)
+    const primaryCompany = cardData.company;
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const imageFileName = `image_${timestamp}.${imageFile.type.split("/")[1] || "jpg"}`;
     const audioFileName = `audio_${timestamp}.${audioFile.type.split("/")[1] || "webm"}`;
-    const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
 
     const uploadResult = await uploadMultipleFiles(
       [
@@ -36,27 +74,34 @@ export async function submitData(formData: FormData) {
       primaryCompany
     );
 
-    // ✅ This part is fixed
-    const sheetData = extractionResult.cards.map(card => ({
-      ...card,
-      jobTitle: card.jobTitle || "", // Provide default empty string
-      badgeId: card.badgeId || "",   // Provide default empty string
-      transcription: audioResult.transcription,
-      summary: audioResult.summary,
+    // Prepare sheet data
+    const sheetData = {
+      ...cardData,
+      transcription: audioData.transcription,
+      summary: audioData.summary,
       folderLink: uploadResult.folderLink,
       imageLink: uploadResult.fileLinks[0] || "Upload Error",
       audioLink: uploadResult.fileLinks[1] || "Upload Error",
-    }));
+    };
 
-    if (sheetData.length === 1) {
-      await appendToSheet(sheetData[0]);
-    } else {
-      await appendMultipleToSheet(sheetData);
+    // Add to sheet
+    await appendToSheet(sheetData);
+
+    // Determine success message
+    let message = "Files uploaded successfully";
+    if (extractionResult.status === "fulfilled" && audioResult.status === "fulfilled") {
+      message = "All processing completed successfully";
+    } else if (extractionResult.status === "rejected" && audioResult.status === "rejected") {
+      message = "Files uploaded, but both OCR and audio processing failed";
+    } else if (extractionResult.status === "rejected") {
+      message = "Files uploaded, but OCR processing failed";
+    } else if (audioResult.status === "rejected") {
+      message = "Files uploaded, but audio processing failed";
     }
 
     return {
       success: true,
-      message: `${extractionResult.count} card(s) processed successfully.`,
+      message,
     };
 
   } catch (error) {
