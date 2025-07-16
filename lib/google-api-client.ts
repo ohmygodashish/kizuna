@@ -34,25 +34,3 @@ function createGoogleAuth() {
 export function getGoogleAuth() {
   return createGoogleAuth();
 }
-
-// Add back the missing functions for diagnostic routes
-export function testGoogleApiConnection() {
-  try {
-    // Don't call getGoogleAuth() at import time, just return a test function
-    return { success: true, message: "Google API connection test" };
-  } catch (error) {
-    return { success: false, error };
-  }
-}
-
-export function getCredentialsInfo() {
-  try {
-    // Don't access env vars at import time
-    return {
-      message: "Credentials info check",
-      hasCredentials: !!process.env.GOOGLE_CREDENTIALS_BASE64
-    };
-  } catch (error) {
-    throw error;
-  }
-}

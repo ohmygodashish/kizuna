@@ -100,7 +100,7 @@ export async function uploadMultipleFiles(
   }
 }
 
-// Add back the missing functions for diagnostic routes
+// ✅ ADDING THIS FUNCTION BACK
 export async function getFolderInfo(folderId: string) {
   try {
     const response = await drive.files.get({
@@ -112,17 +112,5 @@ export async function getFolderInfo(folderId: string) {
   } catch (error) {
     console.error("Error getting folder info:", error);
     throw error;
-  }
-}
-
-export function testGoogleDriveConnection() {
-  try {
-    return {
-      success: true,
-      message: "Google Drive connection test",
-      hasFolderId: !!process.env.GOOGLE_DRIVE_FOLDER_ID
-    };
-  } catch (error) {
-    return { success: false, error };
   }
 }
