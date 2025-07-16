@@ -1,12 +1,12 @@
 // lib/google-drive.ts
 
 import { google } from "googleapis";
-import { auth } from "./google-api-client";
+import { getGoogleAuth } from "./google-api-client";
 import { Readable } from "stream";
 
 const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || "";
 
-const drive = google.drive({ version: "v3", auth });
+const drive = google.drive({ version: "v3", auth: getGoogleAuth() });
 
 function bufferToStream(buffer: Buffer) {
   const stream = new Readable();

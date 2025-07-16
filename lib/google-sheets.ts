@@ -1,9 +1,9 @@
 // lib/google-sheets.ts
 
 import { google } from "googleapis";
-import { auth } from "./google-api-client";
+import { getGoogleAuth } from "./google-api-client";
 
-const sheets = google.sheets({ version: "v4", auth });
+const sheets = google.sheets({ version: "v4", auth: getGoogleAuth() });
 
 interface SheetData {
   company: string;
