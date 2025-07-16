@@ -95,12 +95,18 @@ export async function processAudio(audioFile: File) {
 
       // レスポンスの処理
       let transcription = ""
+      
+      // Read response as text first
+      const responseText = await transcriptionResponse.text()
+      
       try {
-        const transcriptionData = await transcriptionResponse.json()
+        // Try to parse as JSON
+        const transcriptionData = JSON.parse(responseText)
         transcription = transcriptionData.text
       } catch (jsonError) {
-        console.log("Response is not JSON, trying text format...")
-        transcription = await transcriptionResponse.text()
+        console.log("Response is not JSON, using text format...")
+        // If it's not JSON, use the text directly
+        transcription = responseText
       }
 
       console.log("Transcription received:", transcription.substring(0, 100) + "...")
