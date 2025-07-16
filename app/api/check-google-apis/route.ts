@@ -4,14 +4,30 @@ import { getSpreadsheetInfo } from "@/lib/google-sheets"
 import { testGoogleDriveConnection, getFolderInfo } from "@/lib/google-drive"
 
 export async function GET(request: NextRequest) {
-  // Return early during build time to avoid env var access issues
-  return NextResponse.json({
-    success: false,
-    error: "Diagnostic route disabled during build/deployment",
-    buildTime: true,
-    message: "This route is only available when running with full environment variables"
-  });
-}
+  try {
+    console.log("=== Google APIs 統合診断開始 ===")
+
+    // 環境変数チェック
+    const envCheck = {
+      GOOGLE_API_CREDENTIALS: !!process.env.GOOGLE_API_CREDENTIALS,
+      GOOGLE_SHEETS_CREDENTIALS: !!process.env.GOOGLE_SHEETS_CREDENTIALS,
+      GOOGLE_SHEET_ID: !!process.env.GOOGLE_SHEET_ID,
+      GOOGLE_DRIVE_FOLDER_ID: !!process.env.GOOGLE_DRIVE_FOLDER_ID,
+      OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
+    }
+
+    // 認証情報の取得
+    let credentialsInfo
+    try {
+      credentialsInfo = getCredentialsInfo()
+    } catch (credError) {
+      return NextResponse.json({
+        success: false,
+        error: "認証情報の取得に失敗しました",
+        envCheck,
+        credentialsError: credError instanceof Error ? credError.message : "Unknown error",
+      })
+    }
 
     // 基本的なGoogle API接続テスト
     const apiConnectionTest = await testGoogleApiConnection()
