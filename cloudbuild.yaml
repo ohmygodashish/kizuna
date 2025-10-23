@@ -5,15 +5,6 @@ steps:
       - '-t'
       - 'gcr.io/${PROJECT_ID}/business-card-parser'
       - '.'
-      - '--build-arg'
-      - 'GOOGLE_CREDENTIALS_BASE64=${_GOOGLE_CREDENTIALS_BASE64}'
-      - '--build-arg'
-      - 'GOOGLE_SHEET_ID=${_GOOGLE_SHEET_ID}'
-      - '--build-arg'
-      - 'GOOGLE_DRIVE_FOLDER_ID=${_GOOGLE_DRIVE_FOLDER_ID}'
-      - '--build-arg'
-      - 'OPENAI_API_KEY=${_OPENAI_API_KEY}'
-    secretEnv: ['_GOOGLE_CREDENTIALS_BASE64', '_OPENAI_API_KEY']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/${PROJECT_ID}/business-card-parser']
