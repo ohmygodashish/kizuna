@@ -1,4 +1,4 @@
-# Business Card Parser
+# Kizuna
 
 This project is a business card parser that leverages AI to extract information from business cards and store it in a structured format. It showcases a combination of backend, DevOps, and AI skills.
 
